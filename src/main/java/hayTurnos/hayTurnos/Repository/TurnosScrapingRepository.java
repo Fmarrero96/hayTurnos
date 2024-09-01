@@ -3,6 +3,7 @@ package hayTurnos.hayTurnos.Repository;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hayTurnos.hayTurnos.Util.DateUtil;
 import hayTurnos.hayTurnos.dto.AvailableCourt;
-import hayTurnos.hayTurnos.dto.AvailableSlot;
 import hayTurnos.hayTurnos.dto.CanchaDisponibleResponse;
 import hayTurnos.hayTurnos.dto.Response;
 
@@ -25,6 +25,9 @@ public class TurnosScrapingRepository {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    private MyTelegramBotRepository myTelegramBotRepository;
     
 
     @Autowired
@@ -56,27 +59,26 @@ public class TurnosScrapingRepository {
         // Crear la entidad de la solicitud con los headers
         HttpEntity<String> entity = new HttpEntity<>(headers);
         
-        String fechaHoy = "2024-08-29";//DateUtil.obtenerFechaDeHoy();
-        String url = "https://alquilatucancha.com/api/v3/availability/sportclubs/1003?date=" + fechaHoy;
+        String fecha = this.myTelegramBotRepository.getFechaBusqueda();
+        String url = "https://alquilatucancha.com/api/v3/availability/sportclubs/1003?date=" + fecha;
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
         String json = cortarHastaAvailableCourtsYEliminarUltimo(responseEntity.getBody());
         Response response = objectMapper.readValue(json, Response.class);
         return response.getAvailableCourts();
     }
 
-    public List<CanchaDisponibleResponse> obtenerTurnosPorHorario(String fecha) throws Exception{
-        String[] fechas = {
-            fecha+"T18:00-03:00",
-            fecha+"T19:30-03:00",
-            fecha+"T21:00-03:00",
-            fecha+"T22:30-03:00"
-        };
-        List<CanchaDisponibleResponse> hayDisponible = new ArrayList<>();;
+    public List<CanchaDisponibleResponse> getCanchaDisponibles() throws Exception{
+        String fecha = this.myTelegramBotRepository.getFechaBusqueda();
+        List<String> horarioList = this.myTelegramBotRepository.getHorario();
+
+        List<String> fechas = horarioList.stream().map(horario -> fecha + horario).collect(Collectors.toList());
+        
+        List<CanchaDisponibleResponse> hayDisponible = new ArrayList<>();
         List<AvailableCourt>  todosLosTurnos = this.obtenerTurnos();
         todosLosTurnos.forEach(turno -> {
             turno.getAvailableSlots().forEach(
                 cancha -> {
-                   if (Arrays.asList(fechas).contains(cancha.getStart())){
+                   if (fechas.contains(cancha.getStart())){
                     CanchaDisponibleResponse canchaDisponibleResponse = new CanchaDisponibleResponse(turno.getName(),cancha.getStart());
                     hayDisponible.add(canchaDisponibleResponse);
                    }
@@ -86,8 +88,8 @@ public class TurnosScrapingRepository {
         return hayDisponible;
     }
 
-    public String obtenerTurnosPorHorarioString(String fecha) throws Exception{
-        return this.construirStringCanchas(this.obtenerTurnosPorHorario(fecha));
+    public String obtenerTurnosPorHorarioString() throws Exception{
+        return this.construirStringCanchas(this.getCanchaDisponibles());
     }
 
 
@@ -95,8 +97,8 @@ public class TurnosScrapingRepository {
         StringBuilder resultado = new StringBuilder();
 
         for (CanchaDisponibleResponse cancha : canchas) {
-            resultado.append("Cancha: ").append(cancha.getNombre())
-                     .append("   Horario: ").append(cancha.getHorario())
+            resultado.append(cancha.getNombre())
+                     .append("   Horario: ").append(DateUtil.formatoHorarioResponse(cancha.getHorario()))
                      .append("\n");
         }
 

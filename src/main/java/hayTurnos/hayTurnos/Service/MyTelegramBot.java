@@ -1,27 +1,35 @@
 package hayTurnos.hayTurnos.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+
+import hayTurnos.hayTurnos.Constants.CONSTANTS;
+import hayTurnos.hayTurnos.Repository.MyTelegramBotRepository;
 
 @Component
 public class MyTelegramBot extends TelegramLongPollingBot {
 
+    @Value("${telegram.bot.username}")
+    private String botUsername;
+
+    @Value("${telegram.bot.token}")
+    private String botToken;
+
     @Autowired
-    private TurnosScrapingService turnosScrapingService;
+    private MyTelegramBotRepository myTelegramBotRepository;
 
     @Override
     public String getBotUsername() {
-        return "HayTurnosBot";
+        return this.botUsername;
     }
 
     @Override
     public String getBotToken() {
-        return "7125254690:AAH64adFqO9Sq8N5AfRiWxe4ZBtpYQxUxOY";
+        return this.botToken;
     }
 
     @Override
@@ -30,36 +38,52 @@ public class MyTelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            String msj = "";
-            try {
-                msj = this.turnosScrapingService.obtenerTurnosPorHorarioString();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            if (this.myTelegramBotRepository.esUsuarioConfiguracion(chatId)) {
+                String msj = "";
+                if(messageText.equalsIgnoreCase(CONSTANTS.COMANDO_BOT_PRENDER)  || messageText.equalsIgnoreCase(CONSTANTS.COMANDO_BOT_APAGAR)){
+                    this.myTelegramBotRepository.cambiarEstadoDeBot(messageText);
+                    msj = "Se actualizo el estado de bot a " + messageText;
+                }else if (messageText.contains(CONSTANTS.COMANDO_BOT_FECHA)){
+                    this.myTelegramBotRepository.cambiarFechaDeBusqueda(messageText);
+                    msj = "Se actualizo la fecha de busqueda a " + messageText;
+                }else if (messageText.contains(CONSTANTS.COMANDO_BOT_CAMBIAR_HORARIOS)){
+                    this.myTelegramBotRepository.cambiarHorarioDeBot(messageText);
+                    msj = "Se actualizo los horarios de busqueda";
+                }else if (messageText.contains(CONSTANTS.COMANDO_BOT_AGREGAR_HORARIOS)){
+                    this.myTelegramBotRepository.agregarHorarioDeBot(messageText);
+                    msj = "Se actualizo los horarios de busqueda";
+                }
 
-            // Aquí envías un string como respuesta
-            SendMessage message = new SendMessage();
-            message.setChatId(String.valueOf(chatId));
-            message.setText("¡Hola! Estos turnos hay disponibles en los horarios que te interesa: \n" + msj);
+                // Aquí envías un string como respuesta
+                SendMessage message = new SendMessage();
+                message.setChatId(String.valueOf(chatId));
+                message.setText(msj);
 
-            try {
-                execute(message);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
+                try {
+                    execute(message);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     // Método para enviar un mensaje a un usuario específico
-    public void enviarMensajeAUsuario(long chatId, String texto) {
+    public void enviarMensajeAUsuario(String texto) {
+        String chatId = this.myTelegramBotRepository.getBotIdUsuarioConfiguracion();
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId)); // ID del usuario
-        message.setText(texto); // Texto del mensaje
+        message.setText("¡Hola! Estos turnos hay disponibles en los horarios que te interesa: \n" + texto); // Texto del mensaje
 
         try {
             execute(message); // Enviar el mensaje
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public Boolean getEstado(){
+        return this.myTelegramBotRepository.getEstado();
     }
 }

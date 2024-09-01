@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import hayTurnos.hayTurnos.Repository.TurnosScrapingRepository;
-import hayTurnos.hayTurnos.dto.AvailableSlot;
 import hayTurnos.hayTurnos.dto.CanchaDisponibleResponse;
 
 @Service
@@ -19,12 +18,15 @@ public class TurnosScrapingService {
     }
 
     public List<CanchaDisponibleResponse>  obtenerTurnosPorHorario() throws Exception{
-        return turnosScrapingRepository.obtenerTurnosPorHorario("2024-08-29");
+        return turnosScrapingRepository.getCanchaDisponibles();
     }
 
-
     public String obtenerTurnosPorHorarioString() throws Exception{
-        return turnosScrapingRepository.obtenerTurnosPorHorarioString("2024-08-29");
+        return turnosScrapingRepository.obtenerTurnosPorHorarioString();
+    }
+
+    public String construirStringCanchas(List<CanchaDisponibleResponse> canchas) {
+        return turnosScrapingRepository.construirStringCanchas(canchas);
     }
 
 }

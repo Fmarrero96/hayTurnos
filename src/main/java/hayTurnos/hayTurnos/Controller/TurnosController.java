@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import hayTurnos.hayTurnos.Service.TurnosScrapingService;
-import hayTurnos.hayTurnos.dto.AvailableSlot;
 import hayTurnos.hayTurnos.dto.CanchaDisponibleResponse;
 
 
