@@ -69,10 +69,9 @@ public class MyTelegramBot extends TelegramLongPollingBot {
     }
 
     // Método para enviar un mensaje a un usuario específico
-    public void enviarMensajeAUsuario(String texto) {
-        String chatId = this.myTelegramBotRepository.getBotIdUsuarioConfiguracion();
+    public void enviarMensajeAUsuario(String texto,String usuario) {
         SendMessage message = new SendMessage();
-        message.setChatId(String.valueOf(chatId)); // ID del usuario
+        message.setChatId(String.valueOf(usuario)); // ID del usuario
         message.setText("¡Hola! Estos turnos hay disponibles en los horarios que te interesa: \n" + texto); // Texto del mensaje
 
         try {

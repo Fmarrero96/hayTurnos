@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import hayTurnos.hayTurnos.Constants.CONSTANTS;
 import hayTurnos.hayTurnos.Util.DateUtil;
 import hayTurnos.hayTurnos.dto.TelegramBotConfigure;
 
@@ -17,15 +17,12 @@ public class MyTelegramBotRepository {
     @Autowired
     private TelegramBotConfigure telegramBotConfigure;
 
-    @Value("${telegram.bot.idUsuarioConfiguracion}")
-    private String idUsuarioConfiguracion;
-
-    public String getBotIdUsuarioConfiguracion() {
-        return idUsuarioConfiguracion;
+    public Boolean esUsuarioConfiguracion(Long idUsuario) {
+        return this.telegramBotConfigure.getIdUsuariosConfig().contains(idUsuario.toString());
     }
 
-    public Boolean esUsuarioConfiguracion(Long idUsuario) {
-        return this.getBotIdUsuarioConfiguracion().equals(idUsuario.toString());
+    public List<String> getUsuariosEnvios(){
+        return this.telegramBotConfigure.getIdUsuariosEnvio();
     }
 
     public String getFechaBusqueda(){
@@ -41,9 +38,9 @@ public class MyTelegramBotRepository {
     }
 
     public void cambiarEstadoDeBot(String estado){
-        if ("prender".equalsIgnoreCase(estado)){
+        if (CONSTANTS.COMANDO_BOT_PRENDER.equalsIgnoreCase(estado)){
             this.telegramBotConfigure.setPrendido(true);
-        }else if ("apagar".equalsIgnoreCase(estado)){
+        }else if (CONSTANTS.COMANDO_BOT_PRENDER.equalsIgnoreCase(estado)){
             this.telegramBotConfigure.setPrendido(false);
         }
     }
@@ -56,7 +53,6 @@ public class MyTelegramBotRepository {
         String horariosExtraidos = DateUtil.extraerHorario(horarios);
         List<String> nuevosHorarios = Arrays.asList(horariosExtraidos.split(","));
         
-
         //T21:00-03:00
         nuevosHorarios = nuevosHorarios.stream().map(horario -> "T" + horario + "-03:00").collect(Collectors.toList());
 
