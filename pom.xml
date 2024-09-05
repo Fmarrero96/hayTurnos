@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>hayTurnos</groupId>
 	<artifactId>hayTurnos</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1.0</version>
 	<packaging>war</packaging>
 	<name>hayTurnos</name>
 	<description>Aplicacion para saber si hay turnos para Distrito Padel</description>
