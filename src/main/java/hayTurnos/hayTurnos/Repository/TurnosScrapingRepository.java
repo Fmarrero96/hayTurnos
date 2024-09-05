@@ -1,7 +1,6 @@
 package hayTurnos.hayTurnos.Repository;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import hayTurnos.hayTurnos.Constants.CONSTANTS;
 import hayTurnos.hayTurnos.Util.DateUtil;
 import hayTurnos.hayTurnos.dto.AvailableCourt;
 import hayTurnos.hayTurnos.dto.CanchaDisponibleResponse;
@@ -38,29 +38,11 @@ public class TurnosScrapingRepository {
 
 
     public List<AvailableCourt> obtenerTurnos() throws Exception {
-        // Crear los headers y agregar el origen simulado
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Accept", "*/*");
-        headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
-        headers.set("Accept-Language", "es-419,es;q=0.9,en;q=0.8");
-        headers.set("Connection", "keep-alive");
-        headers.set("Content-Type", "application/json");
-        headers.set("Host", "alquilatucancha.com");
-        headers.set("Origin", "https://atcsports.io");
-        headers.set("Referer", "https://atcsports.io/");
-        headers.set("Sec-CH-UA", "\"Not)A;Brand\";v=\"99\", \"Google Chrome\";v=\"127\", \"Chromium\";v=\"127\"");
-        headers.set("Sec-CH-UA-Mobile", "?0");
-        headers.set("Sec-CH-UA-Platform", "\"macOS\"");
-        headers.set("Sec-Fetch-Dest", "empty");
-        headers.set("Sec-Fetch-Mode", "cors");
-        headers.set("Sec-Fetch-Site", "cross-site");
-        headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
-
         // Crear la entidad de la solicitud con los headers
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = new HttpEntity<>(this.obtenerHeader());
         
         String fecha = this.myTelegramBotRepository.getFechaBusqueda();
-        String url = "https://alquilatucancha.com/api/v3/availability/sportclubs/1003?date=" + fecha;
+        String url = CONSTANTS.URL_ALQUILAR_TU_CANCHA + fecha;
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
         String json = cortarHastaAvailableCourtsYEliminarUltimo(responseEntity.getBody());
         Response response = objectMapper.readValue(json, Response.class);
@@ -120,5 +102,26 @@ public class TurnosScrapingRepository {
         // Si "available_courts" no se encuentra, retorna el string original
         return input;
     }
+    
+    private HttpHeaders obtenerHeader(){
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "*/*");
+        headers.set("Accept-Encoding", "gzip, deflate, br, zstd");
+        headers.set("Accept-Language", "es-419,es;q=0.9,en;q=0.8");
+        headers.set("Connection", "keep-alive");
+        headers.set("Content-Type", "application/json");
+        headers.set("Host", "alquilatucancha.com");
+        headers.set("Origin", "https://atcsports.io");
+        headers.set("Referer", "https://atcsports.io/");
+        headers.set("Sec-CH-UA", "\"Not)A;Brand\";v=\"99\", \"Google Chrome\";v=\"127\", \"Chromium\";v=\"127\"");
+        headers.set("Sec-CH-UA-Mobile", "?0");
+        headers.set("Sec-CH-UA-Platform", "\"macOS\"");
+        headers.set("Sec-Fetch-Dest", "empty");
+        headers.set("Sec-Fetch-Mode", "cors");
+        headers.set("Sec-Fetch-Site", "cross-site");
+        headers.set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36");
+        return headers;
+    }
+
 
 }

@@ -15,6 +15,8 @@ public class TelegramBotConfigure {
     Boolean prendido;
     List<String> horarios;
     String fecha;
+    List<String> idUsuariosConfig;
+    List<String> idUsuariosEnvio;
 
 
     public void agregarFechas(List<String> horariosAgregar){
